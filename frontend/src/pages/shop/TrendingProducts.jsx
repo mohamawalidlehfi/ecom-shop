@@ -1,40 +1,60 @@
-import React, { useState } from 'react'
-import ProductCards from './ProductCards'
+import React, { useState } from 'react';
+import ProductCards from './ProductCards';
+import { useFetchAllProductsQuery } from '../../redux/features/products/productsApi';
 
-import Products from "../../data/products.json"
+const TrendingProducts = ({ category = 'all', color = 'all', minPrice = 0, maxPrice = Infinity, currentPage = 1, ProductsPerPage = 8 }) => {
+    const [visibleProducts, setVisibleProducts] = useState(8);
 
+    
+    const { 
+        data: { products = [], totalPages = 1, totalProducts = 0 } = {}, 
+        error, 
+        isLoading 
+    } = useFetchAllProductsQuery({
+        category: category !== 'all' ? category : '',
+        color: color !== 'all' ? color : '',
+        minPrice: isNaN(minPrice) ? '' : minPrice,
+        maxPrice: isNaN(maxPrice) ? '' : maxPrice,
+        page: currentPage,
+        limit: ProductsPerPage,
+    });
 
-const TrendingProducts = () => {
-        const [visibleProducts,setVisibleProducts] =useState(8);
-        const loadMoreProducts = () =>{
-            setVisibleProducts(prevCount =>prevCount + 4)
-      }
-  return (
-      
-      <section className='section__container product__container'>
-          <h2 className='section__header'>Trending Products..</h2>
-          <p className='section__subheader mb-12'>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iusto, ex? Ducimus 
-              veritatis tempora numquam! Natus amet delectus ipsum repellat voluptate mollitia
-          </p>
+    const loadMoreProducts = () => {
+        setVisibleProducts((prevCount) => prevCount + 4);
+    };
 
-          {/* products card */}
-          <div className="mt-12">
-            <ProductCards  products={Products.slice(0 ,visibleProducts)} />
-          </div>
+    // Handle loading state
+    if (isLoading) {
+        return <div className='text-center text-gray-500'>Loading products...</div>;
+    }
 
-          {/* load more  products btn  */}
-          <div className='product__btn'>
-            {
-              visibleProducts < Products.length && (
-                <button className='btn' onClick={loadMoreProducts}>Load More</button>
-              )
-            }
+    // Handle error state
+    if (error) {
+        return <div className='text-center text-red-500'>Failed to load products. Please try again later.</div>;
+    }
 
-          </div>
-            
-      </section>   
-  )
-}
+    return (
+        <section className='section__container product__container'>
+            <h2 className='section__header'>Trending Products</h2>
+            <p className='section__subheader mb-12'>
+                Discover the Hottest Picks: Elevate Your Style with Our Curated Collection of Trending Women's Fashion Products.
+            </p>
 
-export default TrendingProducts
+            {/* Products card */}
+            <div className='mt-12'>
+                <ProductCards products={products.slice(0, visibleProducts)} />
+            </div>
+
+            {/* Load more products button */}
+            <div className='product__btn'>
+                {visibleProducts < products.length && (
+                    <button className='btn' onClick={loadMoreProducts}>
+                        Load More
+                    </button>
+                )}
+            </div>
+        </section>
+    );
+};
+
+export default TrendingProducts;
